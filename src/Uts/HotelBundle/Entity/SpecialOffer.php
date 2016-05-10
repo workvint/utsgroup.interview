@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * SpecialOffer
  *
  * @ORM\Table(name="special_offer")
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Uts\HotelBundle\Repository\SpecialOfferRepository")
  */
 class SpecialOffer
 {

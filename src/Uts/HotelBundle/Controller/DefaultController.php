@@ -25,23 +25,30 @@ class DefaultController extends Controller
             $objSearchRequest = $objSearchForm->getData();
             /* @var $objSearchRequest SearchRequest */
             $em = $this->getDoctrine()->getManagerForClass('UtsHotelBundle:SearchRequest');
-            $em->persist($objSearchRequest);
-            $em->flush();
+            $repository = $em->getRepository('UtsHotelBundle:SearchRequest');
+            
+            $result = $repository->findCompleteBy($objSearchRequest);
+            if ($result) {
+                $objSearchRequest = $result;
+            } else { 
+                $em->persist($objSearchRequest);
+                $em->flush();
 
-            try{
-                $objSearcher = $this->get('uts_hotel.searcher');
-                $results = $objSearcher->search($objSearchRequest);
-                foreach($results as $objResult){
-                    $em->persist($objResult);
+                try{
+                    $objSearcher = $this->get('uts_hotel.searcher');
+                    $results = $objSearcher->search($objSearchRequest);
+                    foreach($results as $objResult){
+                        $em->persist($objResult);
+                    }
+                    $objSearchRequest->markAsComplete();
+                    $em->flush();
+                }catch (\Exception $err){
+                    $objSearchRequest->markAsError();
+                    $em->flush();
+                    throw $err;
                 }
-                $objSearchRequest->markAsComplete();
-                $em->flush();
-            }catch (\Exception $err){
-                $objSearchRequest->markAsError();
-                $em->flush();
-                throw $err;
             }
-
+            
             return new RedirectResponse(
                 $this->get('router')
                     ->generate('uts_hotel_search_results', array('searchId' => $objSearchRequest->getId()))
@@ -66,10 +73,22 @@ class DefaultController extends Controller
         );
         if($objSearchRequest->isComplete() || $objSearchRequest->isOld()){
             $repository = $em->getRepository('UtsHotelBundle:SearchResult');
+            
             $query = $repository->createQueryForPagination($searchId);
             $paginator  = $this->get('knp_paginator');
             $pagination = $paginator->paginate($query, $page, 50);
             $templateVars['pagination'] = $pagination;
+            
+            $templateVars['hotelCount'] = $repository->getHotelCount($searchId);
+            
+            $repository = $em->getRepository('UtsHotelBundle:SpecialOffer');
+            $templateVars['specialOffer'] = $repository->findActiveBy($objSearchRequest);
+            
+            $repository = $em->getRepository('UtsHotelBundle:Currency');
+            $templateVars['currency'] = $repository->findAllArray();            
+            
+            $templateVars['countryId'] = $objSearchRequest->getCity()->getCountry()->getId();
+            $templateVars['cityId'] = $objSearchRequest->getCity()->getId();
         }
         return $this->render('UtsHotelBundle:Default:results.html.twig', $templateVars);
     }

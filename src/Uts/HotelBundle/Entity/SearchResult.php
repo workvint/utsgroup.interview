@@ -7,8 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Результат поиска отелей
  *
- * @ORM\Entity(repositoryClass="Uts\HotelBundle\Repository\SearchResult")
  * @ORM\Table(name="search_result")
+ * @ORM\Entity(repositoryClass="Uts\HotelBundle\Repository\SearchResultRepository")
  */
 class SearchResult
 {
@@ -90,7 +90,7 @@ class SearchResult
     {
         return $this->price;
     }
-
+        
     /**
      * Set currency
      *

@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * City
  *
  * @ORM\Table(name="currency")
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Uts\HotelBundle\Repository\CurrencyRepository")
  */
 class Currency
 {

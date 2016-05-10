@@ -24,26 +24,80 @@
         {# total items count #}
         <div class="row">
             <div class="col-lg-12 text-muted">
-                Всего предложений: {{ pagination.getTotalItemCount }}
+                Найдено отелей: {{ hotelCount }}
             </div>
         </div>
         <div class="center-block">
             {{ knp_pagination_render(pagination) }}
         </div>
+        
         {# table body #}
+        {% set hotelId = null %}
+        {% set hotelCounter = 1 %}
+        
         {% for item in pagination.items %}
-            <div class="row">
-                <div class="col-lg-1">{{ loop.index }}</div>
-                <div class="col-lg-6">
+            
+            {% if hotelId != item.hotel.id %}
+            {# hotel header #}
+            <div class="row bg-info">
+                <div class="col-lg-1">{{ hotelCounter }}</div>
+                <div class="col-lg-4">
                     <span class="text-capitalize">{{ item.hotel.name }}</span>
+                </div>
+                <div class="col-lg-2">от {{ item.price }} {{ item.currency }}</div>
+                <div class="col-lg-4"></div>
+            </div>
+            
+                {% set hotelId = item.hotel.id %}
+                {% set hotelCounter = hotelCounter + 1 %}
+            {% endif %}
+            
+            {# hotel variants #}
+            <div class="row">
+                <div class="col-lg-1">&nbsp;</div>
+                <div class="col-lg-4">
                     <span class="text-primary">{{ item.roomName }}</span>
                     {% if(item.mealName) %}
                         <span class="text-muted">({{ item.mealName }})</span>
                     {% endif %}
                 </div>
                 <div class="col-lg-2">{{ item.price }} {{ item.currency }}</div>
+                
+                {% set offer = null %}
+                
+                {% if specialOffer.hotel[hotelId] is defined %}
+                    {% set offer = specialOffer.hotel[hotelId] %}
+                {% elseif specialOffer.city[cityId] is defined %}
+                    {% set offer = specialOffer['city'][cityId] %}
+                {% elseif specialOffer.country[countryId] is defined %}
+                    {% set offer = specialOffer.country[countryId] %}
+                {% endif %}
+                
+                {% if offer is not empty %}
+                    {% if offer.a is defined %}
+                        {% set offerValue = offer.a.value %}
+                        {% set offerName = offer.a.name %}
+                        {% set offerType = 'RUB' %}
+                    {% endif %}
+                    
+                    {% if offer.m is defined %}
+                        {% set price = item.price * currency[item.currency] %}
+                        {% if offerValue is not defined or offerValue < price / 100 * offer.m.value %}
+                            {% set offerValue = offer.m.value  + '%'%}
+                            {% set offerName = offer.m.name %}
+                            {% set offerType = '%' %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                
+                <div class="col-lg-4">
+                    {% if offerValue is defined %}Скидка {{ offerValue }} {% endif %}
+                    {% if offerType is defined %}{{ offerType }} {% endif %}
+                    {%if offerName is defined %}по акции "{{ offerName }}"{% endif %}
+                </div>
             </div>
         {% endfor %}
+        
         {# display navigation #}
         <div class="center-block">
             {{ knp_pagination_render(pagination) }}

@@ -10,8 +10,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Class SearchRequest
  * @package Uts\HotelBundle\Entity
  *
- * @ORM\Entity
  * @ORM\Table(name="search_request")
+ * @ORM\Entity(repositoryClass="Uts\HotelBundle\Repository\SearchRequestRepository")
  * @UtsHotelAssert\ValidSearchDates
  */
 class SearchRequest
